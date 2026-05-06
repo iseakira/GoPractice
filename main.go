@@ -15,8 +15,11 @@ type Page struct {
 func (p *Page) save() error {
 	filename := p.Title + ".txt"
 
-	return os.WriteFile(filename, p.Body, 0600)}
+	return os.WriteFile(filename, []byte(p.Body), 0600)
+}
 
+//func (p *Page) save() と書くことで、Page 型に save() というメソッドを生やしている。
+//だから p.save() と書けるし、メソッド内で p.Title や p.Body が使える。
 func loadPage(title string) (*Page,error){
 	filename := title + ".txt"
 	body,err := os.ReadFile(filename)
@@ -34,7 +37,11 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page){
 
 func viewHandler(w http.ResponseWriter, r *http.Request){
 	title := r.URL.Path[len("/view/"):]
-	p,_ := loadPage(title)
+	p, err := loadPage(title)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
 	renderTemplate(w,"view",p)
 }
 
@@ -50,10 +57,27 @@ func editHandler(w http.ResponseWriter, r *http.Request){
 	renderTemplate(w,"edit",p)
 }
 
+func saveHandler(w http.ResponseWriter, r *http.Request){
+	title := r.URL.Path[len("/save/"):]
+	body := r.FormValue("body")
+	p := &Page{Title: title, Body: []byte(body)}
+	err := p.save()
+
+	if err !=nil{
+		http.Error(w,err.Error(), http.StatusNotFound)
+	}
+
+	http.Redirect(w,r, "/view/"+title,http.StatusFound)
+
+
+}
+
+
 
 	func main(){
 		http.HandleFunc("/view/",viewHandler)
 		http.HandleFunc("/edit/",editHandler)
+		http.HandleFunc("/save/",saveHandler)
 		log.Fatal(http.ListenAndServe(":8080",nil))
 
 

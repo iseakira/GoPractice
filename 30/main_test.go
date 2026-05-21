@@ -1,0 +1,30 @@
+package calc
+
+import "testing"
+
+func TestAdd(t *testing.T){
+	tests := []struct{
+		name string
+		ihs int
+		rhs int
+		want int
+
+	}{
+		{name: "test1", ihs: 0, rhs: 1, want: 1},
+    {name: "test2", ihs: 1, rhs: -1, want: 0},
+    {name: "test3", ihs: 2, rhs: 1, want: 3},
+	}
+
+	for _,test := range tests {
+		t.Run(test.name,func(t *testing.T){
+			t.Parallel()
+				got := Add(test.ihs,test.rhs)
+		if got != test.want{
+			t.Errorf("%v: want %v, but %v:",test.name,test.want,got)
+		}
+
+		})
+
+
+	}
+}
